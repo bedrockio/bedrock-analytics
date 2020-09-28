@@ -1,0 +1,25 @@
+{
+  "name": "Bedrock Analytics",
+  "description": "Elasticsearch based analytics for Bedrock",
+  "version": "0.0.1",
+  "license": "MIT",
+  "engines": {
+    "bedrock": ">=1"
+  },
+  "services": {
+    "api": {
+      "dependencies": {
+        "@elastic/elasticsearch": "^7.5.0"
+      },
+      "routes": [
+        {
+          "name": "analytics",
+          "path": "/services/api/src/v1/analytics.js"
+        }
+      ],
+      "env": {
+        "ELASTICSEARCH_URI": "http://localhost:9200"
+      }
+    }
+  }
+}
