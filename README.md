@@ -2,7 +2,7 @@
 
 This is an analytics Foundation for Bedrock Core. It includes the following:
 
-- APIs for querying analytics on Elasticsearch
+- API for querying analytics on Elasticsearch
 - A micro service for automatically indexing Mongoose data into Elasticsearch
 - React components for Elasticsearch querying
 - React components for visualizing all of the above
@@ -44,6 +44,8 @@ The following code will query time series of 1 day intervals from Elasticsearch 
 </TimeSeries>
 ```
 
+![Bar Chart](docs/bar-chart.png)
+
 The following code will pull an hourly time series of the sum of `priceUsd` for all products and render it as an area chart:
 
 ```js
@@ -64,5 +66,7 @@ The following code will pull an hourly time series of the sum of `priceUsd` for 
 ### Deployment
 
 ### Enabling Analytics Status Screen
+
+![Bar Chart](docs/analytics-status.png)
 
 ### Re-indexing Elasticsearch Data
