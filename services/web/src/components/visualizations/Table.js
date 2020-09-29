@@ -4,16 +4,9 @@ import { numberWithCommas } from 'utils/formatting';
 
 export default class VisualizationTable extends React.Component {
   render() {
-    const {
-      keyName,
-      valueField,
-      valueFieldName,
-      data,
-      keyFormatter,
-      valueFormatter
-    } = this.props;
+    const { keyName, valueField, valueFieldName, data, keyFormatter, valueFormatter, collapsing } = this.props;
     return (
-      <Table celled>
+      <Table celled collapsing={collapsing}>
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell width={10}>{keyName || 'Name'}</Table.HeaderCell>
@@ -24,13 +17,9 @@ export default class VisualizationTable extends React.Component {
           {data.map((item) => {
             return (
               <Table.Row key={item.key}>
+                <Table.Cell>{keyFormatter ? keyFormatter(item) : item.key}</Table.Cell>
                 <Table.Cell>
-                  {keyFormatter ? keyFormatter(item) : item.key}
-                </Table.Cell>
-                <Table.Cell>
-                  {valueFormatter
-                    ? valueFormatter(item)
-                    : numberWithCommas(Math.round(item[valueField || 'value']))}
+                  {valueFormatter ? valueFormatter(item) : numberWithCommas(Math.round(item[valueField || 'value']))}
                 </Table.Cell>
               </Table.Row>
             );
