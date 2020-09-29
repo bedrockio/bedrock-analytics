@@ -188,6 +188,21 @@ Code:
 
 ## Playbooks
 
+### Enabling Analytics Status Screen
+
+![Bar Chart](docs/analytics-status.png)
+
+There's a `screens/AnalyticsStatus` component which provides an admin only view in the indexing status. It also provides a small kitchen sync for the analytics components above:
+
+In `/services/web/src/App.js`:
+
+```js
+import { AnalyticsStatus } from "./screens";
+<Protected path="/analytics/status" allowed={AnalyticsStatus} exact />;
+```
+
+Then visit: http://localhost:2200/analytics/status
+
 ### Deployment
 
 Elasticsearch and MongoDB deployment is provided in Bedrock Core.
@@ -228,8 +243,12 @@ spec:
           emptyDir: {}
 ```
 
-### Enabling Analytics Status Screen
-
-![Bar Chart](docs/analytics-status.png)
-
 ### Re-indexing Elasticsearch Data
+
+To wipe out all ES data:
+
+```bash
+curl -XDELETE "localhost:9200/mongodb*"
+```
+
+The `mongoose-to-elasticsearch` process will automatically recreate and index all data.
