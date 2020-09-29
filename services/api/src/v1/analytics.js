@@ -18,6 +18,13 @@ const filterOptions = {
   q: Joi.string(),
 };
 
+function interpretError(error) {
+  if (error.message.match(/index_not_found_exception/i)) {
+    throw new Error(`Elasticsearch index not found`);
+  }
+  throw error;
+}
+
 router
   .use(authenticate({ type: 'user' }))
   .use(fetchUser)
@@ -57,11 +64,7 @@ router
           termsSize,
         });
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   )
@@ -86,11 +89,7 @@ router
           ...filter,
         });
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   )
@@ -107,11 +106,7 @@ router
       try {
         ctx.body = await search(index, filter);
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   )
@@ -130,12 +125,7 @@ router
       try {
         object = await fetch(index, field || 'id', value);
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
-        return;
+        interpretError(err);
       }
       ctx.body = object;
     }
@@ -154,11 +144,7 @@ router
       try {
         ctx.body = await stats(index, fields, filter);
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   )
@@ -176,11 +162,7 @@ router
       try {
         ctx.body = await cardinality(index, fields, filter);
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   )
@@ -197,22 +179,22 @@ router
         const { index } = item;
         const elasticsearchResult = await cardinality(index, ['id'], {});
         const { db } = mongoose.connection;
-        const collection = db.collection(index.replace('mongodb-', ''));
+        const collectionName = index.replace('mongodb-', '');
+        const collection = db.collection(collectionName);
         const mongodbCount = await collection.count();
         status[index] = {
           elasticsearch: item,
           elasticsearchCount: elasticsearchResult.id,
+          mongodb: {
+            collectionName,
+          },
           mongodbCount,
         };
       }
       try {
         ctx.body = status;
       } catch (err) {
-        ctx.body = {
-          error: {
-            message: err.message,
-          },
-        };
+        interpretError(err);
       }
     }
   );

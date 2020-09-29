@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { AutoSizer } from 'react-virtualized';
-import { numberWithCommas, formatterForDataCadence } from 'utils/formatting';
+import { numberWithCommas } from 'utils/formatting';
+import { formatterForDataCadence } from 'utils/visualizations';
 import {
   AreaChart,
   LineChart,
@@ -12,9 +13,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend
+  Legend,
 } from 'recharts';
 import moment from 'moment';
+import { defaultColors } from 'utils/visualizations';
 
 export default class SeriesChart extends PureComponent {
   render() {
@@ -28,7 +30,7 @@ export default class SeriesChart extends PureComponent {
       area,
       bar,
       disableDot,
-      color = '#f7931e'
+      color = defaultColors[0],
     } = this.props;
     let Chart = LineChart;
     let ChartGraph = Line;
@@ -45,6 +47,9 @@ export default class SeriesChart extends PureComponent {
     return (
       <AutoSizer disableHeight>
         {({ width }) => {
+          if (!width) {
+            return <div />;
+          }
           return (
             <Chart
               width={width}
@@ -54,10 +59,8 @@ export default class SeriesChart extends PureComponent {
                 top: 5,
                 right: 20,
                 left: 25,
-                bottom: 5
-              }}
-            >
-              <CartesianGrid vertical={false} stroke="#EEF0F4" />
+                bottom: 5,
+              }}>
               <XAxis
                 dataKey="timestamp"
                 name="Time"
@@ -68,20 +71,12 @@ export default class SeriesChart extends PureComponent {
                 tickMargin={8}
               />
               <YAxis
-                tickFormatter={
-                  valueFieldFormatter || defaultValueFieldFormatter
-                }
+                tickFormatter={valueFieldFormatter || defaultValueFieldFormatter}
                 tick={{ fill: '#6C767B', fontSize: '13' }}
                 tickLine={{ fill: '#6C767B' }}
                 tickMargin={8}
               />
-              {!bar && (
-                <Tooltip
-                  labelFormatter={(unixTime) =>
-                    moment(unixTime).format('YY/MM/DD LT')
-                  }
-                />
-              )}
+              {!bar && <Tooltip labelFormatter={(unixTime) => moment(unixTime).format('YY/MM/DD LT')} />}
               {legend && <Legend />}
               <ChartGraph
                 type="monotone"
@@ -91,17 +86,13 @@ export default class SeriesChart extends PureComponent {
                 strokeWidth={2}
                 fill={area || bar ? color : undefined}
                 opacity={bar ? 1 : 1}
-                activeDot={
-                  disableDot
-                    ? { r: 0 }
-                    : { r: 6, strokeWidth: 2, fill: '#f5821f' }
-                }
+                activeDot={disableDot ? { r: 0 } : { r: 6, strokeWidth: 2, fill: '#f5821f' }}
                 dot={{
                   stroke: color,
                   strokeWidth: 2,
                   strokeOpacity: 1,
                   r: 4,
-                  fill: '#fff'
+                  fill: '#fff',
                 }}
                 barSize={30}
               />

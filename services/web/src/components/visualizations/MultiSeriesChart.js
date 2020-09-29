@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { AutoSizer } from 'react-virtualized';
-import { numberWithCommas, formatterForDataCadence } from 'utils/formatting';
+import { numberWithCommas } from 'utils/formatting';
+import { formatterForDataCadence } from 'utils/visualizations';
 import {
   AreaChart,
   LineChart,
@@ -12,11 +13,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend
+  Legend,
 } from 'recharts';
 import moment from 'moment';
-
-const COLORS = ['#F58220', '#177FAE', '#46984E', '#697075'];
+import { defaultColors } from 'utils/visualizations';
 
 const fuse = (series, valueField) => {
   const byTs = {};
@@ -34,24 +34,14 @@ const fuse = (series, valueField) => {
   return series[0].map((item) => {
     return {
       timestamp: item.timestamp,
-      ...byTs[item.timestamp]
+      ...byTs[item.timestamp],
     };
   });
 };
 
 export default class MultiSeriesChart extends PureComponent {
   render() {
-    const {
-      data,
-      valueField,
-      valueFieldNames,
-      legend,
-      area,
-      bar,
-      stacked,
-      colors,
-      disableDot
-    } = this.props;
+    const { data, valueField, valueFieldNames, legend, area, bar, stacked, colors, disableDot } = this.props;
     let Chart = LineChart;
     let ChartGraph = Line;
     if (area) {
@@ -63,11 +53,14 @@ export default class MultiSeriesChart extends PureComponent {
       ChartGraph = Bar;
     }
     const fusedData = fuse(data, valueField);
-    const finalColors = colors || COLORS;
+    const finalColors = colors || defaultColors;
     const tickFormatter = formatterForDataCadence(data[0]);
     return (
       <AutoSizer disableHeight>
         {({ width }) => {
+          if (!width) {
+            return <div />;
+          }
           return (
             <Chart
               width={width}
@@ -77,9 +70,8 @@ export default class MultiSeriesChart extends PureComponent {
                 top: 5,
                 right: 20,
                 left: 10,
-                bottom: 5
-              }}
-            >
+                bottom: 5,
+              }}>
               <CartesianGrid vertical={false} stroke="#EEF0F4" />
               <XAxis
                 dataKey="timestamp"
@@ -116,9 +108,7 @@ export default class MultiSeriesChart extends PureComponent {
               {!bar && (
                 <Tooltip
                   formatter={(value) => numberWithCommas(Math.round(value))}
-                  labelFormatter={(unixTime) =>
-                    moment(unixTime).format('YY/MM/DD LT')
-                  }
+                  labelFormatter={(unixTime) => moment(unixTime).format('YY/MM/DD LT')}
                 />
               )}
             </Chart>

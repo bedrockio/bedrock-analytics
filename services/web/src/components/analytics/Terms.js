@@ -1,28 +1,19 @@
 import React from 'react';
-import request from 'utils/request';
+import { request } from 'utils/api';
 import { Message } from 'semantic-ui-react';
 
 export default class Terms extends React.Component {
   state = {
     data: null,
     loading: true,
-    error: null
+    error: null,
   };
   componentDidMount() {
     this.fetch();
   }
 
   fetch() {
-    const {
-      index,
-      aggField,
-      field,
-      operation,
-      filter,
-      includeTopHit,
-      referenceFetch,
-      termsSize
-    } = this.props;
+    const { index, aggField, field, operation, filter, includeTopHit, referenceFetch, termsSize } = this.props;
     const body = {
       index,
       aggField,
@@ -31,12 +22,12 @@ export default class Terms extends React.Component {
       filter,
       includeTopHit,
       referenceFetch,
-      termsSize
+      termsSize,
     };
     request({
       method: 'POST',
       path: '/1/analytics/terms',
-      body
+      body,
     })
       .then((data) => {
         this.setState({ data, error: null, loading: false });

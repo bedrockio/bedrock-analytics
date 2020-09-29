@@ -138,7 +138,7 @@ async function listIndices() {
         index: parse[2],
         status: parse[0],
         diskSize: parse[8],
-        count: parse[6],
+        count: parseInt(parse[6], 10),
       };
     });
 }

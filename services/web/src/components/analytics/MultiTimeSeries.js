@@ -1,12 +1,12 @@
 import React from 'react';
-import request from 'utils/request';
+import { request } from 'utils/api';
 import { Message } from 'semantic-ui-react';
 
 export default class TimeSeries extends React.Component {
   state = {
     data: null,
     loading: true,
-    error: null
+    error: null,
   };
   componentDidMount() {
     this.fetch();
@@ -25,12 +25,12 @@ export default class TimeSeries extends React.Component {
           interval,
           field,
           dateField,
-          filter
+          filter,
         };
         return request({
           method: 'POST',
           path: '/1/analytics/time-series',
-          body
+          body,
         });
       })
     )

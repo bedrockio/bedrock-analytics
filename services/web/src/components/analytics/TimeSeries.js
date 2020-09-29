@@ -1,5 +1,5 @@
 import React from 'react';
-import request from 'utils/request';
+import { request } from 'utils/api';
 import { Message } from 'semantic-ui-react';
 
 const hasDifferentParams = (oldProps, newProps) => {
@@ -16,7 +16,7 @@ export default class TimeSeries extends React.Component {
   state = {
     data: null,
     loading: true,
-    error: null
+    error: null,
   };
 
   componentDidMount() {
@@ -37,12 +37,12 @@ export default class TimeSeries extends React.Component {
       interval,
       field,
       dateField,
-      filter
+      filter,
     };
     request({
       method: 'POST',
       path: '/1/analytics/time-series',
-      body
+      body,
     })
       .then((data) => {
         this.setState({ data, error: null, loading: false });

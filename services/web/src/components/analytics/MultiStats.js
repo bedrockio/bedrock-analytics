@@ -1,12 +1,12 @@
 import React from 'react';
-import request from 'utils/request';
+import { request } from 'utils/api';
 import { Message } from 'semantic-ui-react';
 
 export default class MultiStats extends React.Component {
   state = {
     data: null,
     loading: true,
-    error: null
+    error: null,
   };
   componentDidMount() {
     this.fetch();
@@ -21,12 +21,12 @@ export default class MultiStats extends React.Component {
         const body = {
           index,
           fields,
-          filter
+          filter,
         };
         return request({
           method: 'POST',
           path: '/1/analytics/stats',
-          body
+          body,
         });
       })
     )

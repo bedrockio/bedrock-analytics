@@ -3,21 +3,11 @@ import { AutoSizer } from 'react-virtualized';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { startCase } from 'lodash';
 import { numberWithCommas } from 'utils/formatting';
-
-const COLORS = ['#F58220', '#177FAE', '#46984E', '#697075'];
+import { defaultColors } from 'utils/visualizations';
 
 export default class DonutChart extends PureComponent {
   render() {
-    const {
-      data,
-      keyField,
-      keyFormatter,
-      valueField,
-      limit,
-      percent,
-      precision,
-      labels = {}
-    } = this.props;
+    const { data, keyField, keyFormatter, valueField, limit, percent, precision, labels = {} } = this.props;
     let trimmedData = data;
     if (limit) {
       const other = { key: 'Other', count: 0, value: 0 };
@@ -34,7 +24,7 @@ export default class DonutChart extends PureComponent {
     data.forEach((item) => {
       total += item[valueField || 'count'];
     });
-    const colors = this.props.colors || COLORS;
+    const colors = this.props.colors || defaultColors;
     const colorFn = this.props.colorFn;
     const defaultKeyFormatter = (item) => {
       const key = keyField || 'key';
@@ -48,6 +38,9 @@ export default class DonutChart extends PureComponent {
     return (
       <AutoSizer disableHeight>
         {({ width }) => {
+          if (!width) {
+            return <div />;
+          }
           const height = 400;
           return (
             <PieChart width={width} height={height} data={trimmedData}>
@@ -60,17 +53,9 @@ export default class DonutChart extends PureComponent {
                 fill="#8884d8"
                 paddingAngle={5}
                 nameKey={keyFormatter || defaultKeyFormatter}
-                dataKey={valueField || 'count'}
-              >
+                dataKey={valueField || 'count'}>
                 {trimmedData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      colorFn
-                        ? colorFn(entry, index)
-                        : colors[index % colors.length]
-                    }
-                  />
+                  <Cell key={`cell-${index}`} fill={colorFn ? colorFn(entry, index) : colors[index % colors.length]} />
                 ))}
               </Pie>
               <Legend />
@@ -78,10 +63,7 @@ export default class DonutChart extends PureComponent {
                 formatter={(value) => {
                   if (percent) {
                     if (precision) {
-                      return `${Math.round(
-                        (value / total) * (10 * precision) * 100
-                      ) /
-                        (10 * precision)}%`;
+                      return `${Math.round((value / total) * (10 * precision) * 100) / (10 * precision)}%`;
                     } else {
                       return `${Math.round((value / total) * 100)}%`;
                     }

@@ -1,12 +1,12 @@
 import React from 'react';
-import request from 'utils/request';
+import { request } from 'utils/api';
 import { Message } from 'semantic-ui-react';
 
 export default class Stats extends React.Component {
   state = {
     data: null,
     loading: true,
-    error: null
+    error: null,
   };
   componentDidMount() {
     this.fetch();
@@ -17,12 +17,12 @@ export default class Stats extends React.Component {
     const body = {
       index,
       fields,
-      filter
+      filter,
     };
     request({
       method: 'POST',
       path: '/1/analytics/stats',
-      body
+      body,
     })
       .then((data) => {
         this.setState({ data, error: null, loading: false });
