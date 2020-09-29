@@ -1,12 +1,12 @@
-const fs = require("fs");
-const elasticsearch = require("@elastic/elasticsearch");
-const config = require("@bedrockio/config");
-const { get: objectGet } = require("lodash");
-const { createHash } = require("crypto");
+const fs = require('fs');
+const elasticsearch = require('@elastic/elasticsearch');
+const config = require('@bedrockio/config');
+const { get: objectGet } = require('lodash');
+const { createHash } = require('crypto');
 
 const elasticsearchClient = new elasticsearch.Client({
-  node: config.get("ELASTICSEARCH_URI"),
-  log: "error",
+  node: config.get('ELASTICSEARCH_URI'),
+  log: 'error',
 });
 
 async function terms(index, aggField, options = undefined) {
@@ -17,13 +17,13 @@ async function terms(index, aggField, options = undefined) {
   let additionalAggs = undefined;
   if (options.field) {
     if (!additionalAggs) additionalAggs = {};
-    additionalAggs["fieldOperation"] = {
-      [options.operation || "sum"]: { field: options.field },
+    additionalAggs['fieldOperation'] = {
+      [options.operation || 'sum']: { field: options.field },
     };
   }
   if (options.includeTopHit || options.referenceFetch) {
     if (!additionalAggs) additionalAggs = {};
-    additionalAggs["includeTopHit"] = {
+    additionalAggs['includeTopHit'] = {
       top_hits: { size: 1 },
     };
   }
@@ -31,7 +31,7 @@ async function terms(index, aggField, options = undefined) {
     aggField: {
       terms: {
         field: aggField,
-        order: options.field ? { fieldOperation: "desc" } : undefined,
+        order: options.field ? { fieldOperation: 'desc' } : undefined,
         size: options.termsSize || 10,
       },
       aggs: additionalAggs,
@@ -47,31 +47,19 @@ async function terms(index, aggField, options = undefined) {
       key: bucket.key,
       count: bucket.doc_count,
       value: bucket.fieldOperation ? bucket.fieldOperation.value : 0,
-      topHit: bucket.includeTopHit
-        ? bucket.includeTopHit.hits.hits[0]
-        : undefined,
+      topHit: bucket.includeTopHit ? bucket.includeTopHit.hits.hits[0] : undefined,
     };
   });
   if (options.referenceFetch) {
-    const {
-      sourceField,
-      destinationIndex,
-      destinationField,
-    } = options.referenceFetch;
+    const { sourceField, destinationIndex, destinationField } = options.referenceFetch;
     if (!sourceField || !destinationField || !destinationIndex) {
-      throw new Error(
-        "Invalid referenceFetch need sourceField, destinationField and destinationIndex"
-      );
+      throw new Error('Invalid referenceFetch need sourceField, destinationField and destinationIndex');
     }
     for (const hit of hits) {
       if (!hit.topHit) continue;
       const sourceValue = objectGet(hit.topHit._source, sourceField);
       if (!sourceValue) continue;
-      const reference = await fetch(
-        destinationIndex,
-        destinationField,
-        sourceValue
-      );
+      const reference = await fetch(destinationIndex, destinationField, sourceValue);
       hit.reference = reference;
     }
   }
@@ -85,8 +73,8 @@ async function timeSeries(index, operation, field, options = undefined) {
   body.aggs = {
     timeSeries: {
       date_histogram: {
-        field: options.dateField || "createdAt",
-        interval: options.interval || "1d",
+        field: options.dateField || 'createdAt',
+        interval: options.interval || '1d',
         min_doc_count: 0,
       },
       aggs: {
@@ -106,16 +94,14 @@ async function timeSeries(index, operation, field, options = undefined) {
     body,
   });
   // console.log(JSON.stringify(result, null, 2));
-  return result.body.aggregations.timeSeries.buckets.map(
-    ({ key_as_string, key, doc_count, fieldOperation }) => {
-      return {
-        dateStr: key_as_string,
-        timestamp: key,
-        count: doc_count || 0,
-        value: fieldOperation ? fieldOperation.value || 0 : 0,
-      };
-    }
-  );
+  return result.body.aggregations.timeSeries.buckets.map(({ key_as_string, key, doc_count, fieldOperation }) => {
+    return {
+      dateStr: key_as_string,
+      timestamp: key,
+      count: doc_count || 0,
+      value: fieldOperation ? fieldOperation.value || 0 : 0,
+    };
+  });
 }
 
 async function stats(index, fields, options = undefined) {
@@ -139,6 +125,22 @@ async function stats(index, fields, options = undefined) {
     stats[field] = result.body.aggregations[`${i}Stats`];
   });
   return stats;
+}
+
+async function listIndices() {
+  const { body } = await elasticsearchClient.cat.indices();
+  return body
+    .split('\n')
+    .slice(0, -1)
+    .map((line) => {
+      const parse = line.split(/\s+/);
+      return {
+        index: parse[2],
+        status: parse[0],
+        diskSize: parse[8],
+        count: parse[6],
+      };
+    });
 }
 
 async function cardinality(index, fields, options = undefined) {
@@ -200,28 +202,15 @@ async function get(index, id) {
   return body;
 }
 
-function parseFilterOptions(
-  options = { from: 0, size: 100 },
-  skipSort = false
-) {
+function parseFilterOptions(options = { from: 0, size: 100 }, skipSort = false) {
   const sort = [
     {
-      [options.dateField || "timestamp"]: {
-        order: "desc",
+      [options.dateField || 'timestamp']: {
+        order: 'desc',
       },
     },
   ];
-  const {
-    providerId,
-    from,
-    size,
-    terms,
-    exists,
-    notExists,
-    minTimestamp,
-    q,
-    range,
-  } = options;
+  const { providerId, from, size, terms, exists, notExists, minTimestamp, q, range } = options;
   const body = {
     sort: skipSort ? undefined : sort,
     from,
@@ -353,19 +342,19 @@ async function ensureIndex(index, { recreate = false } = {}) {
       dynamic_templates: [
         {
           strings_as_keywords: {
-            match_mapping_type: "string",
+            match_mapping_type: 'string',
             mapping: {
-              type: "keyword",
+              type: 'keyword',
             },
           },
         },
       ],
       properties: {
-        "time-stamp": {
-          type: "long",
+        'time-stamp': {
+          type: 'long',
         },
         timestamp: {
-          type: "date",
+          type: 'date',
         },
       },
     };
@@ -378,16 +367,12 @@ async function ensureIndex(index, { recreate = false } = {}) {
   }
 }
 
-async function indexEvent(
-  index,
-  event,
-  { idField = null, refresh = false } = {}
-) {
+async function indexEvent(index, event, { idField = null, refresh = false } = {}) {
   let id = idField ? event[idField] : event.id;
   if (!id) {
-    const md5 = createHash("md5");
+    const md5 = createHash('md5');
     md5.update(JSON.stringify(event));
-    id = md5.digest("hex");
+    id = md5.digest('hex');
     event.id = id;
   }
   // console.log(index, type, id, event);
@@ -402,8 +387,8 @@ async function indexEvent(
 function loadJsonStreamFile(path) {
   return fs
     .readFileSync(path)
-    .toString("utf-8")
-    .split("\n")
+    .toString('utf-8')
+    .split('\n')
     .filter((line) => line.length)
     .map((line) => JSON.parse(line));
 }
@@ -421,4 +406,5 @@ module.exports = {
   refreshIndex,
   ensureIndex,
   loadJsonStreamFile,
+  listIndices,
 };

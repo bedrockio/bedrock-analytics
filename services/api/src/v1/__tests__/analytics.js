@@ -115,4 +115,23 @@ describe('/1/analytics', () => {
       expect(response.status).toBe(401);
     });
   });
+  describe('POST /mongodb-status', () => {
+    it('should allow', async () => {
+      const user = await createUser({ roles: ['admin'] });
+      const sessions = [
+        { kwh: 1, userId: user.id, id: '1' },
+        { kwh: 2, userId: user.id, id: '2' },
+        { kwh: 1, userId: user.id, id: '3' },
+      ];
+      await indexEvents(sessions);
+      const response = await request('POST', `/1/analytics/mongodb-status`, {}, { user });
+      expect(response.status).toBe(200);
+      console.log('response.body', response.body);
+    });
+    it('should deny for a non-admin', async () => {
+      const user = await createUser({ roles: ['consumer'] });
+      const response = await request('POST', `/1/analytics/mongodb-status`, {}, { user });
+      expect(response.status).toBe(401);
+    });
+  });
 });

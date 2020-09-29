@@ -2,7 +2,8 @@ const Router = require('@koa/router');
 const Joi = require('@hapi/joi');
 const validate = require('../middlewares/validate');
 const { authenticate, fetchUser, checkUserRole } = require('../middlewares/authenticate');
-const { terms, timeSeries, search, fetch, stats, cardinality } = require('../lib/utils/analytics');
+const { terms, timeSeries, search, fetch, stats, cardinality, listIndices } = require('../lib/utils/analytics');
+const mongoose = require('mongoose');
 
 const router = new Router();
 
@@ -174,6 +175,38 @@ router
       const { index, filter = {}, fields } = ctx.request.body;
       try {
         ctx.body = await cardinality(index, fields, filter);
+      } catch (err) {
+        ctx.body = {
+          error: {
+            message: err.message,
+          },
+        };
+      }
+    }
+  )
+  .post(
+    '/mongodb-status',
+    validate({
+      body: Joi.object({}),
+    }),
+    async (ctx) => {
+      const list = await listIndices();
+      const relevantList = list.filter((item) => item.index.match(/^mongodb/));
+      const status = {};
+      for (const item of relevantList) {
+        const { index } = item;
+        const elasticsearchResult = await cardinality(index, ['id'], {});
+        const { db } = mongoose.connection;
+        const collection = db.collection(index.replace('mongodb-', ''));
+        const mongodbCount = await collection.count();
+        status[index] = {
+          elasticsearch: item,
+          elasticsearchCount: elasticsearchResult.id,
+          mongodbCount,
+        };
+      }
+      try {
+        ctx.body = status;
       } catch (err) {
         ctx.body = {
           error: {
