@@ -32,7 +32,7 @@ This service can be configured with the following env variables:
 
 Some more advanced options can be found in the `env.conf`
 
-## Example: Basic Visualizations
+## Example Usage
 
 ### Time Series: Bar Chart
 
