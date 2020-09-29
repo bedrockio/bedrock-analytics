@@ -34,7 +34,13 @@ Some more advanced options can be found in the `env.conf`
 
 ## Example: Basic Visualizations
 
+### Time Series: Bar Chart
+
 The following code will query time series of 1 day intervals from Elasticsearch (via the `/1/analytics` API) and then render a bar chart over time:
+
+![Bar Chart](docs/bar-chart.png)
+
+Code:
 
 ```js
 <TimeSeries index="mongodb-products" operation="count" interval="1d">
@@ -44,9 +50,13 @@ The following code will query time series of 1 day intervals from Elasticsearch 
 </TimeSeries>
 ```
 
-![Bar Chart](docs/bar-chart.png)
+### Time Series: Area Chart
 
 The following code will pull an hourly time series of the sum of `priceUsd` for all products and render it as an area chart:
+
+![Area Chart](docs/area-chart.png)
+
+Code:
 
 ```js
 <TimeSeries
@@ -59,6 +69,121 @@ The following code will pull an hourly time series of the sum of `priceUsd` for 
     return <SeriesChart data={data} height={200} area valueField="value" />;
   }}
 </TimeSeries>
+```
+
+### Basic Stats
+
+You can use the `Cardinality` component to count the number of unique instances of an attribute:
+
+![Statistic](docs/statistic.png)
+
+Code:
+
+```js
+<Cardinality index="mongodb-products" fields={["id", "shop"]}>
+  {(data) => {
+    return (
+      <Statistic.Group widths="two">
+        <Statistic>
+          <Statistic.Value>{data["id"]}</Statistic.Value>
+          <Statistic.Label>Products</Statistic.Label>
+        </Statistic>
+        <Statistic>
+          <Statistic.Value>{data["shop"]}</Statistic.Value>
+          <Statistic.Label>Shops</Statistic.Label>
+        </Statistic>
+      </Statistic.Group>
+    );
+  }}
+</Cardinality>
+```
+
+### Terms Aggregations
+
+Using the `Terms` you can aggregate attributes. For example, this is to group products by their name and occurences:
+
+![Table](docs/table.png)
+
+Code:
+
+```js
+<Terms index={"mongodb-products"} aggField="name" termsSize={10}>
+  {(data) => {
+    return (
+      <Table
+        collapsing
+        data={data}
+        valueField="count"
+        valueFieldName="Occurrences"
+      />
+    );
+  }}
+</Terms>
+```
+
+Or the `DonutChart` representation of the same data:
+
+![Donut Chart](docs/donut-chart-1.png)
+
+Code:
+
+```js
+<Terms index={"mongodb-shops"} aggField="name" termsSize={10}>
+  {(data) => {
+    return <DonutChart data={data} limit={8} percent />;
+  }}
+</Terms>
+```
+
+### Advanced Stats
+
+You can use `MultiCardinality` to do multiple unique count queries:
+
+![Donut Chart](docs/donut-chart-2.png)
+
+Code:
+
+```js
+<MultiCardinality
+  fetches={[
+    {
+      index: "mongodb-products",
+      filter: {
+        range: {
+          priceUsd: {
+            gte: 50,
+          },
+        },
+      },
+      fields: ["id"],
+    },
+    {
+      index: "mongodb-products",
+      filter: {
+        range: {
+          priceUsd: {
+            lt: 50,
+          },
+        },
+      },
+      fields: ["id"],
+    },
+  ]}
+>
+  {(rawData) => {
+    const data = [
+      {
+        key: "Above 50",
+        count: rawData[0].id,
+      },
+      {
+        key: "Below 50",
+        count: rawData[1].id,
+      },
+    ];
+    return <DonutChart data={data} limit={8} percent />;
+  }}
+</MultiCardinality>
 ```
 
 ## Playbooks
