@@ -19,6 +19,10 @@ const filterOptions = {
 };
 
 function interpretError(error) {
+  const { meta } = error;
+  if (meta.body && meta.body.error.type === 'parsing_exception') {
+    throw new Error(`Elasticsearch parse error: ${meta.body.error.reason}`);
+  }
   if (error.message.match(/index_not_found_exception/i)) {
     throw new Error(`Elasticsearch index not found`);
   }

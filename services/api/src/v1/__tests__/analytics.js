@@ -1,7 +1,16 @@
-const { indexEvent, refreshIndex, ensureIndex } = require('./../../lib/utils/analytics');
-const { setupDb, teardownDb, request, createUser } = require('../../test-helpers');
+const {
+  indexEvent,
+  refreshIndex,
+  ensureIndex,
+} = require("./../../lib/utils/analytics");
+const {
+  setupDb,
+  teardownDb,
+  request,
+  createUser,
+} = require("../../test-helpers");
 
-const testIndex = 'bedrock-analytics-test-sessions';
+const testIndex = "bedrock-analytics-test-sessions";
 
 jest.setTimeout(20 * 1000);
 
@@ -9,7 +18,7 @@ const indexEvents = async (events) => {
   await ensureIndex(testIndex, { recreate: true });
   let i = 0;
   for (const event of events) {
-    event.timestamp = Date.parse(event['date-created']);
+    event.timestamp = Date.parse(event["date-created"]);
     if (i === 0) {
       event.deletedAt = new Date();
     }
@@ -30,10 +39,10 @@ afterAll(async () => {
   await teardownDb();
 });
 
-describe('/1/analytics', () => {
-  describe('POST /search', () => {
-    it('should allow analytics search (admin)', async () => {
-      const user = await createUser({ roles: ['admin'] });
+describe("/1/analytics", () => {
+  describe("POST /search", () => {
+    it("should allow analytics search (admin)", async () => {
+      const user = await createUser({ roles: ["admin"] });
       const sessions = [
         { kwh: 1, userId: user.id },
         { kwh: 2, userId: user.id },
@@ -41,8 +50,8 @@ describe('/1/analytics', () => {
       ];
       await indexEvents(sessions);
       const response = await request(
-        'POST',
-        '/1/analytics/search',
+        "POST",
+        "/1/analytics/search",
         {
           index: testIndex,
         },
@@ -51,8 +60,8 @@ describe('/1/analytics', () => {
       expect(response.status).toBe(200);
       expect(response.body.hits.hits.length).toBe(3);
     });
-    it('should deny analytics for non-admin', async () => {
-      const user = await createUser({ roles: ['consumer'] });
+    it("should deny analytics for non-admin", async () => {
+      const user = await createUser({ roles: ["consumer"] });
       const sessions = [
         { kwh: 1, userId: user.id },
         { kwh: 2, userId: user.id },
@@ -60,8 +69,8 @@ describe('/1/analytics', () => {
       ];
       await indexEvents(sessions);
       const response = await request(
-        'POST',
-        '/1/analytics/search',
+        "POST",
+        "/1/analytics/search",
         {
           index: testIndex,
         },
@@ -70,32 +79,32 @@ describe('/1/analytics', () => {
       expect(response.status).toBe(401);
     });
   });
-  describe('POST /fetch', () => {
-    it('should allow fetch', async () => {
-      const user = await createUser({ roles: ['admin'] });
+  describe("POST /fetch", () => {
+    it("should allow fetch", async () => {
+      const user = await createUser({ roles: ["admin"] });
       const sessions = [
-        { kwh: 1, userId: user.id, id: '1' },
-        { kwh: 2, userId: user.id, id: '2' },
-        { kwh: 1, userId: user.id, id: '3' },
+        { kwh: 1, userId: user.id, id: "1" },
+        { kwh: 2, userId: user.id, id: "2" },
+        { kwh: 1, userId: user.id, id: "3" },
       ];
       await indexEvents(sessions);
       const response = await request(
-        'POST',
-        '/1/analytics/fetch',
+        "POST",
+        "/1/analytics/fetch",
         {
           index: testIndex,
-          field: 'id',
-          value: '2',
+          field: "id",
+          value: "2",
         },
         { user }
       );
       expect(response.status).toBe(200);
-      expect(response.body.id).toBe('2');
+      expect(response.body.id).toBe("2");
       expect(response.body.kwh).toBe(2);
       expect(response.body.userId).toBe(user.id);
     });
-    it('should deny fetch for a non-admin', async () => {
-      const user = await createUser({ roles: ['consumer'] });
+    it("should deny fetch for a non-admin", async () => {
+      const user = await createUser({ roles: ["consumer"] });
       const sessions = [
         { kwh: 1, userId: user.id },
         { kwh: 2, userId: user.id },
@@ -103,34 +112,43 @@ describe('/1/analytics', () => {
       ];
       await indexEvents(sessions);
       const response = await request(
-        'POST',
+        "POST",
         `/1/analytics/fetch?accountId=${user.accountId}`,
         {
           index: testIndex,
-          field: 'id',
-          value: '2',
+          field: "id",
+          value: "2",
         },
         { user }
       );
       expect(response.status).toBe(401);
     });
   });
-  describe('POST /mongodb-status', () => {
-    it('should allow', async () => {
-      const user = await createUser({ roles: ['admin'] });
+  describe("POST /mongodb-status", () => {
+    it("should allow", async () => {
+      const user = await createUser({ roles: ["admin"] });
       const sessions = [
-        { kwh: 1, userId: user.id, id: '1' },
-        { kwh: 2, userId: user.id, id: '2' },
-        { kwh: 1, userId: user.id, id: '3' },
+        { kwh: 1, userId: user.id, id: "1" },
+        { kwh: 2, userId: user.id, id: "2" },
+        { kwh: 1, userId: user.id, id: "3" },
       ];
       await indexEvents(sessions);
-      const response = await request('POST', `/1/analytics/mongodb-status`, {}, { user });
+      const response = await request(
+        "POST",
+        `/1/analytics/mongodb-status`,
+        {},
+        { user }
+      );
       expect(response.status).toBe(200);
-      console.log('response.body', response.body);
     });
-    it('should deny for a non-admin', async () => {
-      const user = await createUser({ roles: ['consumer'] });
-      const response = await request('POST', `/1/analytics/mongodb-status`, {}, { user });
+    it("should deny for a non-admin", async () => {
+      const user = await createUser({ roles: ["consumer"] });
+      const response = await request(
+        "POST",
+        `/1/analytics/mongodb-status`,
+        {},
+        { user }
+      );
       expect(response.status).toBe(401);
     });
   });
