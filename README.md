@@ -190,6 +190,44 @@ Code:
 
 ### Deployment
 
+Elasticsearch and MongoDB deployment is provided in Bedrock Core.
+
+The `services/mongoose-to-elasticsearch` deployment is structured similarly to the API deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongoose-to-elasticsearch-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongoose-to-elasticsearch
+  template:
+    metadata:
+      labels:
+        app: mongoose-to-elasticsearch
+    spec:
+      containers:
+        - image: gcr.io/bedrock-foundation/bedrock-core-services-mongoose-to-elasticsearch
+          imagePullPolicy: Always
+          name: main
+          env:
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017/bedrock_staging"
+            - name: ELASTICSEARCH_URI
+              value: "http://localhost:9200"
+            - name: MONGO_COLLECTIONS_TO_INDEX
+              value: "users,shops,products"
+          volumeMounts:
+            - name: cache
+              mountPath: /service/data
+      volumes:
+        - name: cache
+          emptyDir: {}
+```
+
 ### Enabling Analytics Status Screen
 
 ![Bar Chart](docs/analytics-status.png)
