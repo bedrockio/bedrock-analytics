@@ -9,7 +9,7 @@ const { Storage } = require('@google-cloud/storage');
 
 const esClient = new elasticsearch.Client({
   node: config.get('ELASTICSEARCH_URI'),
-  log: 'error',
+  log: 'error'
 });
 
 const sleep = (ms) => {
@@ -24,16 +24,16 @@ const defaultMongodbMapping = {
       strings_as_keywords: {
         match_mapping_type: 'string',
         mapping: {
-          type: 'keyword',
-        },
-      },
-    },
+          type: 'keyword'
+        }
+      }
+    }
   ],
   properties: {
     [updatedAtField]: {
-      type: 'date',
-    },
-  },
+      type: 'date'
+    }
+  }
 };
 
 function indexNameForMongodbCollection(db, collectionName) {
@@ -58,11 +58,12 @@ async function ensureIndex(index, { recreate = false } = {}) {
   }
   const existsResult2 = await esClient.indices.exists({ index });
   if (!(existsResult2.statusCode === 200)) {
+    logger.info(`Creating ES index ${index}`);
     await esClient.indices.create({
       index,
       body: {
-        mappings: defaultMongodbMapping,
-      },
+        mappings: defaultMongodbMapping
+      }
     });
   }
 }
@@ -89,7 +90,7 @@ async function readCursor(cursor, limit) {
 }
 
 function flatten(arr) {
-  return arr.reduce(function (flat, toFlatten) {
+  return arr.reduce(function(flat, toFlatten) {
     return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
   }, []);
 }
@@ -112,7 +113,7 @@ async function indexDocuments(index, documents) {
     delete doc._id;
     return {
       ...doc,
-      id,
+      id
     };
   });
   const body = flatten(esDocs.map((doc) => [{ index: { _index: index, _id: doc.id } }, doc]));
@@ -132,7 +133,7 @@ async function indexDocuments(index, documents) {
           status: action[operation].status,
           error: action[operation].error,
           operation: body[i * 2],
-          document: body[i * 2 + 1],
+          document: body[i * 2 + 1]
         });
       }
     });
@@ -161,13 +162,7 @@ function sanitizeDocuments(collectionName, docs, attributes = null) {
   });
 }
 
-async function syncMongodbCollection(
-  db,
-  collectionName,
-  index,
-  query = {},
-  options = { enableHistorical: false, bucketName: undefined }
-) {
+async function syncMongodbCollection(db, collectionName, index, query = {}, options = {}) {
   const collection = db.collection(collectionName);
   const startTs = Date.now();
   const total = await collection.countDocuments(query);
@@ -193,46 +188,42 @@ async function syncMongodbCollection(
   return { total, numIndexed, duration: Date.now() - startTs };
 }
 
-async function indexMongodbCollection(
-  db,
-  collectionName,
-  options = { enableHistorical: false, bucketName: undefined }
-) {
+async function indexMongodbCollection(db, collectionName, options = {}) {
   const index = indexNameForMongodbCollection(db, collectionName);
   await ensureIndex(index);
   const sort = [
     {
       [updatedAtField]: {
-        order: 'desc',
-      },
-    },
+        order: 'desc'
+      }
+    }
   ];
   const { body } = await esClient.search({
     index,
     body: {
       sort,
-      size: 1,
-    },
+      size: 1
+    }
   });
   const { hits } = body;
   const lastEntry = hits.hits[0];
   let query = {};
   if (lastEntry) {
     query[updatedAtField] = {
-      $gt: new Date(lastEntry._source[updatedAtField]),
+      $gt: new Date(lastEntry._source[updatedAtField])
     };
   }
   const stats = await syncMongodbCollection(db, collectionName, index, query, options);
   return {
     ...stats,
     collectionName,
-    index,
+    index
   };
 }
 
 function autoIndexMongodbCollections(db, collectionNames, intervalSeconds = 30) {
   logger.info(
-    `Starting auto indexing for MongoDB collections: ${collectionNames.join(',')}, Elasticsearch URI = ${config.get(
+    `Starting auto indexing for MongoDB collections: ${collectionNames.join(', ')}, Elasticsearch URI = ${config.get(
       'ELASTICSEARCH_URI'
     )}`
   );
@@ -266,8 +257,8 @@ async function searchIndex(index, size = 10000) {
   const { body } = await esClient.search({
     index,
     body: {
-      size,
-    },
+      size
+    }
   });
   const { hits } = body;
   return hits.hits;
@@ -284,5 +275,5 @@ module.exports = {
   sanitizeDocuments,
   indexNameForMongodbCollection,
   searchIndex,
-  createDateString,
+  createDateString
 };
