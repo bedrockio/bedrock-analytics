@@ -32,7 +32,7 @@ export default class DonutChart extends PureComponent {
       if (label.length <= 3) {
         return label.toUpperCase();
       }
-      return labels[key] || startCase(label);
+      return labels[key] || startCase(label.toLowerCase());
     };
 
     return (

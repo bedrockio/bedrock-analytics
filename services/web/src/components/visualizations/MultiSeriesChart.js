@@ -39,9 +39,22 @@ const fuse = (series, valueField) => {
   });
 };
 
+const defaultValueFieldFormatter = (value) => numberWithCommas(value);
+
 export default class MultiSeriesChart extends PureComponent {
   render() {
-    const { data, valueField, valueFieldNames, legend, area, bar, stacked, colors, disableDot } = this.props;
+    const {
+      data,
+      valueField,
+      valueFieldNames,
+      valueFieldFormatter,
+      legend,
+      area,
+      bar,
+      stacked,
+      colors,
+      disableDot,
+    } = this.props;
     let Chart = LineChart;
     let ChartGraph = Line;
     if (area) {
@@ -83,7 +96,7 @@ export default class MultiSeriesChart extends PureComponent {
                 tickMargin={8}
               />
               <YAxis
-                tickFormatter={(value) => numberWithCommas(value)}
+                tickFormatter={valueFieldFormatter || defaultValueFieldFormatter}
                 tick={{ fill: '#6C767B', fontSize: '13' }}
                 tickLine={{ fill: '#6C767B' }}
                 tickMargin={8}
@@ -107,7 +120,7 @@ export default class MultiSeriesChart extends PureComponent {
               })}
               {!bar && (
                 <Tooltip
-                  formatter={(value) => numberWithCommas(Math.round(value))}
+                  formatter={valueFieldFormatter || defaultValueFieldFormatter}
                   labelFormatter={(unixTime) => moment(unixTime).format('YY/MM/DD LT')}
                 />
               )}

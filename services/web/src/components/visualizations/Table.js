@@ -1,12 +1,32 @@
 import React from 'react';
 import { Table } from 'semantic-ui-react';
 import { numberWithCommas } from 'utils/formatting';
+import { startCase } from 'lodash';
 
 export default class VisualizationTable extends React.Component {
   render() {
-    const { keyName, valueField, valueFieldName, data, keyFormatter, valueFormatter, collapsing } = this.props;
+    const {
+      keyField,
+      keyName,
+      valueField,
+      valueFieldName,
+      data,
+      keyFormatter,
+      valueFieldFormatter,
+      collapsing,
+      labels = {},
+    } = this.props;
+    const defaultKeyFormatter = (item) => {
+      const key = keyField || 'key';
+      const label = item[key];
+      if (label.length <= 3) {
+        return label.toUpperCase();
+      }
+      return labels[key] || startCase(label.toLowerCase());
+    };
+
     return (
-      <Table celled collapsing={collapsing}>
+      <Table celled basic="very" collapsing={collapsing}>
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell width={10}>{keyName || 'Name'}</Table.HeaderCell>
@@ -17,9 +37,11 @@ export default class VisualizationTable extends React.Component {
           {data.map((item) => {
             return (
               <Table.Row key={item.key}>
-                <Table.Cell>{keyFormatter ? keyFormatter(item) : item.key}</Table.Cell>
+                <Table.Cell>{keyFormatter ? keyFormatter(item) : defaultKeyFormatter(item)}</Table.Cell>
                 <Table.Cell>
-                  {valueFormatter ? valueFormatter(item) : numberWithCommas(Math.round(item[valueField || 'value']))}
+                  {valueFieldFormatter
+                    ? valueFieldFormatter(item[valueField || 'value'])
+                    : numberWithCommas(Math.round(item[valueField || 'value']))}
                 </Table.Cell>
               </Table.Row>
             );
